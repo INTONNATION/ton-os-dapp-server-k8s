@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: statsd
+  name: statsd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: statsd
+  template:
+    metadata:
+      labels:
+        io.kompose.service: statsd
+    spec:
+      containers:
+      - args:
+        - --statsd.mapping-config=/statsd-mappings/statsd-mapping.yaml
+        image: prom/statsd-exporter:v0.12.2
+        name: statsd
+        ports:
+        - containerPort: 9102
+        - containerPort: 9125
+          protocol: UDP
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1.5Gi
+          requests:
+            cpu: "0.2"
+            memory: 0.5Gi
+        volumeMounts:
+          - name: statsd-mapping-vol
+            mountPath: /statsd-mappings/statsd-mapping.yaml
+            subPath: statsd-mapping.yaml
+      volumes:
+      - name: statsd-mapping-vol
+        configMap:
+          name: statsd-mapping

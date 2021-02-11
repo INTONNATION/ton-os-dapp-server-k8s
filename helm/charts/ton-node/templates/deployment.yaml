@@ -1,0 +1,65 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: node
+  name: node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: node
+  template:
+    metadata:
+      labels:
+        io.kompose.service: node
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: node
+        image: senegal/tonlabs-ton-node:latest
+        name: rnode
+        args: ['normal']
+        ports:
+        - containerPort: 30303
+          protocol: UDP
+          hostPort: 30303
+        securityContext:
+          capabilities:
+            add:
+            - SYS_PTRACE
+        resources:
+          limits:
+            cpu: "8"
+            memory: 16Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+        volumeMounts:
+          - name: config-vol
+            mountPath: /ton-node/configs/config.json
+            subPath: config.json 
+          - name: default-config-vol
+            mountPath: /ton-node/configs/default_config.json
+            subPath: default_config.json
+          - name: log-cfg-vol
+            mountPath: /ton-node/configs/log_cfg.yml
+            subPath: log_cfg.yml
+#          - name: ton-global-vol
+#            mountPath: /ton-node/configs/ton-global.config.json
+#            subPath: ton-global.config.json
+      volumes:
+      - name: config-vol
+        configMap:
+          name: config
+      - name: default-config-vol
+        configMap:
+          name: default-config
+      - name: log-cfg-vol
+        configMap:
+          name: log-cfg
+#      - name: ton-global-vol
+#        configMap:
+#          name: ton-global
